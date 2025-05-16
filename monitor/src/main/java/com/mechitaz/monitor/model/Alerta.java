@@ -21,10 +21,10 @@ public class Alerta {
     private String severidad;
 
 
-public  boolean esCritico(){
+public boolean esCritico(){
     return "ALTA".equalsIgnoreCase(severidad);
 }
 public void marcarComoLeido(){
-    mensaje += "(leido)";
+    this.mensaje += "(leido)";
 }
 }
