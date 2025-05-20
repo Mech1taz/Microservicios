@@ -5,20 +5,26 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mechitaz.monitor.service.MonitorSistema;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RestController
+
 @RequestMapping("/api/monitor")
 public class ControllerMonitor {
-    private final MonitorSistema monitor = new MonitorSistema();
+    @Autowired
+    private final MonitorSistema monitor;
+    public ControllerMonitor(MonitorSistema monitor){
+        this.monitor=monitor;
+    }
 
-    @GetMapping("/api/status")
+    @GetMapping("/status")
     public String obtenerEstado(){
         monitor.monitorearRedimiento();
         return monitor.visualizarEstado();
     }
-    @GetMapping("/api/alertas")
+    @GetMapping("/alertas")
     public Object obtenerAlertas(){
         return monitor.recibirAlertas();
         
