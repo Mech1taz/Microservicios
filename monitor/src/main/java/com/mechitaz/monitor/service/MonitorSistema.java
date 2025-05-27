@@ -2,7 +2,7 @@ package com.mechitaz.monitor.service;
 
 import com.sun.management.OperatingSystemMXBean;
 import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,6 @@ import com.mechitaz.monitor.repository.AlertaRepository;
 public class MonitorSistema {
 
     private String estado = "Desconocido";
-    private final List<Alerta> alertas = new ArrayList<>();
 
     @Autowired
     private AlertaRepository alertaRepository;
@@ -25,45 +24,36 @@ public class MonitorSistema {
     }
 
     public List<Alerta> recibirAlertas() {
-        return alertas;
+        return alertaRepository.findAll();
     }
 
     @SuppressWarnings("deprecation")
     public void monitorearRedimiento() {
-    OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
-    double cpu = osBean.getSystemCpuLoad();  // aún puede dar -1
+        double cpu = osBean.getSystemCpuLoad(); 
+        long totalRam = osBean.getTotalPhysicalMemorySize();
+        long freeRam = osBean.getFreePhysicalMemorySize();
+        long usedRam = totalRam - freeRam;
 
-    long totalRam = osBean.getTotalPhysicalMemorySize();
-    long freeRam = osBean.getFreePhysicalMemorySize();
-    long usedRam = totalRam - freeRam;
+        boolean sobrecarga = false;
 
-    boolean sobrecarga = false;
+        if (cpu >= 0) {
+            sobrecarga = cpu > 0.8;
+        }
 
-    // Solo verificar si el CPU es válido
-    if (cpu >= 0) {
-        sobrecarga = cpu > 0.8;
+        sobrecarga = sobrecarga || usedRam > totalRam * 0.8;
+
+        if (sobrecarga) {
+            estado = "SOBRECARGAAAAAAAAA";
+
+            String mensaje = "CPU: " + (cpu >= 0 ? String.format("%.2f", cpu * 100) + "%" : "No disponible") +
+                             ", RAM usada: " + (usedRam / 1024 / 1024) + " MB";
+
+            Alerta alerta = new Alerta(0, "Sistema", mensaje, "ALTA", null);
+            alertaRepository.save(alerta);
+        } else {
+            estado = "Esta estable :3";
+        }
     }
-
-    // Verificar si se está usando más del 80% de RAM física
-    sobrecarga = sobrecarga || usedRam > totalRam * 0.8;
-
-    if (sobrecarga) {
-        this.estado = "SOBRECARGAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-        Alerta alerta = new Alerta(
-            0,
-            "Sistema",
-            "CPU: " + (cpu >= 0 ? String.format("%.2f", cpu * 100) + "%" : "No disponible") +
-            ", RAM usada: " + (usedRam / 1024 / 1024) + " MB",
-            "ALTA"
-        );
-
-        alertas.add(alerta);
-        alertaRepository.save(alerta);
-    } else {
-        this.estado = "Esta bien :3";
-    }
-    }
-
 }

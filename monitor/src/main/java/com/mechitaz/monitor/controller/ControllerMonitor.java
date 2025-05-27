@@ -1,34 +1,35 @@
 package com.mechitaz.monitor.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import com.mechitaz.monitor.model.Alerta;
+import com.mechitaz.monitor.repository.AlertaRepository;
 import com.mechitaz.monitor.service.MonitorSistema;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
-
 @RequestMapping("/api/monitor")
 public class ControllerMonitor {
-    @Autowired
-    private final MonitorSistema monitor;
-    public ControllerMonitor(MonitorSistema monitor){
-        this.monitor=monitor;
-    }
 
+    @Autowired
+    private MonitorSistema monitor;
+
+    @Autowired
+    private AlertaRepository alertaRepository;
+
+    // Monitorea el sistema y devuelve el estado actual
     @GetMapping("/status")
-    public String obtenerEstado(){
+    public String obtenerEstado() {
         monitor.monitorearRedimiento();
         return monitor.visualizarEstado();
     }
+
+    // Devuelve todas las alertas
     @GetMapping("/alertas")
-    public Object obtenerAlertas(){
+    public List<Alerta> obtenerAlertas() {
         return monitor.recibirAlertas();
-        
     }
-    
-    
 }
