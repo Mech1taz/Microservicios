@@ -76,9 +76,9 @@ public class RespaldoController {
     public String hacerRespaldo() {
         try {
             respaldoService.hacerRespaldo();
-            return "✅ Respaldo realizado correctamente.";
+            return "Respaldo realizado correctamente :3";
         } catch (Exception e) {
-            return "❌ Error al hacer respaldo: " + e.getMessage();
+            return "Error al hacer respaldo: " + e.getMessage();
         }
     }
 
@@ -86,9 +86,9 @@ public class RespaldoController {
     public String restaurar() {
         try {
             respaldoService.restaurarRespaldo();
-            return "✅ Restauración realizada correctamente.";
+            return "Restauración realizada correctamente :3";
         } catch (Exception e) {
-            return "❌ Error al restaurar: " + e.getMessage();
+            return "Error al restaurar: " + e.getMessage();
         }
     }
 }
