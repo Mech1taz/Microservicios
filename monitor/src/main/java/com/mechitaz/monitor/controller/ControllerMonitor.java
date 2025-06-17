@@ -32,4 +32,5 @@ public class ControllerMonitor {
     public List<Alerta> obtenerAlertas() {
         return monitor.recibirAlertas();
     }
+    
 }
