@@ -29,7 +29,7 @@ public class MonitorSistemaTest {
     }
 
     @Test
-    public void testEstadoInicial() {
+    public void testVisualizarEstado() {
         String estado = monitorSistema.visualizarEstado();
         assertEquals("Desconocido", estado);
     }
