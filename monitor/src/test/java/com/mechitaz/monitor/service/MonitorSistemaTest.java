@@ -36,13 +36,13 @@ public class MonitorSistemaTest {
 
     @Test
     public void testRecibirAlertas() {
-        Alerta alerta = new Alerta(1, "Sistema", "Mensaje simulado", "ALTA", null);
+        Alerta alerta = new Alerta(1, "Sistema", "Mensaje fake", "ALTA", null);
         when(alertaRepository.findAll()).thenReturn(List.of(alerta));
 
         List<Alerta> resultado = monitorSistema.recibirAlertas();
 
         assertEquals(1, resultado.size());
-        assertEquals("Mensaje simulado", resultado.get(0).getMensaje());
+        assertEquals("Mensaje fake", resultado.get(0).getMensaje());
     }
 
     @Test
