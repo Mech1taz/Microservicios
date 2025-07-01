@@ -16,8 +16,21 @@ public class MonitorSistema {
 
     private String estado = "Desconocido";
 
-    @Autowired
     private AlertaRepository alertaRepository;
+    private OperatingSystemMXBean osBean;
+
+    // Constructor 
+    @Autowired
+    public MonitorSistema(AlertaRepository alertaRepository) {
+        this.alertaRepository = alertaRepository;
+        this.osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    }
+
+    // Constructor alternativo para pruebas unitarias
+    public MonitorSistema(AlertaRepository alertaRepository, OperatingSystemMXBean osBean) {
+        this.alertaRepository = alertaRepository;
+        this.osBean = osBean;
+    }
 
     public String visualizarEstado() {
         return estado;
@@ -27,7 +40,7 @@ public class MonitorSistema {
         return alertaRepository.findAll();
     }
 
-    @SuppressWarnings("deprecation")
+    
     public void monitorearRedimiento() {
         OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
 
@@ -56,4 +69,6 @@ public class MonitorSistema {
             estado = "Esta estable :3";
         }
     }
+    
+
 }

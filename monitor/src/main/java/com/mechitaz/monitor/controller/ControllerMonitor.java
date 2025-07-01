@@ -28,12 +28,12 @@ public class ControllerMonitor {
         return monitor.visualizarEstado();
     }
 
-    // Devuelve todas las alertas
+    // obtener todas las alertas
     @GetMapping("/alertas")
     public List<Alerta> obtenerAlertas() {
         return monitor.recibirAlertas();
     }
-    //Para actualizar alertas
+    //actualizar alertas
     @PutMapping("/alertas/{id}")
     public String actualizarAlerta(@PathVariable int id, @RequestBody Alerta nuevaAlerta) {
         Optional<Alerta> alertaExistente = alertaRepository.findById(id);
@@ -43,27 +43,27 @@ public class ControllerMonitor {
             alerta.setMensaje(nuevaAlerta.getMensaje());
             alerta.setSeveridad(nuevaAlerta.getSeveridad());
             alertaRepository.save(alerta);
-            return "✅ Alerta actualizada.";
+            return " Alerta actualizada.";
         } else {
-            return "⚠️ Alerta no encontrada.";
+            return "Alerta no encontrada.";
         }
     }
 
-    //  Eliminar una alerta por ID
+    //  Eliminar una alerta por su ID
     @DeleteMapping("/alertas/{id}")
     public String eliminarAlerta(@PathVariable int id) {
         if (alertaRepository.existsById(id)) {
             alertaRepository.deleteById(id);
-            return "🗑 Alerta eliminada.";
+            return "Alerta eliminada.";
         } else {
-            return "⚠️ Alerta no encontrada.";
+            return "Alerta no encontrada.";
         }
     }
 
-    // Eliminar todas las alertas
+    // Eliminar tdas las alertas
     @DeleteMapping("/alertas")
     public String eliminarTodas() {
         alertaRepository.deleteAll();
-        return "🚮 Todas las alertas eliminadas.";
+        return "Todas las alertas eliminadas.";
     }
 }
