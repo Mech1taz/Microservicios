@@ -42,9 +42,7 @@ public class MonitorSistema {
 
     
     public void monitorearRedimiento() {
-        OperatingSystemMXBean osBean = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-        double cpu = osBean.getSystemCpuLoad(); 
+        double cpu = osBean.getSystemCpuLoad();
         long totalRam = osBean.getTotalPhysicalMemorySize();
         long freeRam = osBean.getFreePhysicalMemorySize();
         long usedRam = totalRam - freeRam;
@@ -61,7 +59,7 @@ public class MonitorSistema {
             estado = "SOBRECARGAAAAAAAAA";
 
             String mensaje = "CPU: " + (cpu >= 0 ? String.format("%.2f", cpu * 100) + "%" : "No disponible") +
-                             ", RAM usada: " + (usedRam / 1024 / 1024) + " MB";
+                            ", RAM usada: " + (usedRam / 1024 / 1024) + " MB";
 
             Alerta alerta = new Alerta(0, "Sistema", mensaje, "ALTA", null);
             alertaRepository.save(alerta);
@@ -69,6 +67,7 @@ public class MonitorSistema {
             estado = "Esta estable :3";
         }
     }
+
     
 
 }
