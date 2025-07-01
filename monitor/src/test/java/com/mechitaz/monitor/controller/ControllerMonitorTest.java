@@ -5,7 +5,7 @@ import com.mechitaz.monitor.model.Alerta;
 import com.mechitaz.monitor.repository.AlertaRepository;
 import com.mechitaz.monitor.service.MonitorSistema;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.Mockito; //supongo que donde esta el when y doNothing estara así?
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
