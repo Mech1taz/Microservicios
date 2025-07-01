@@ -24,6 +24,8 @@ import java.util.Optional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.hateoas.EntityModel;
+
 @WebMvcTest(ControllerMonitor.class)
 public class ControllerMonitorTest {
 
@@ -42,16 +44,29 @@ public class ControllerMonitorTest {
     @Test
     void testObtenerEstado() throws Exception {
         when(monitor.visualizarEstado()).thenReturn("SOBRECARGAAAAAAAAA");
-
         mockMvc.perform(get("/api/monitor/status"))
                .andExpect(status().isOk())
                .andExpect(content().string("SOBRECARGAAAAAAAAA"));
     }
 
     @Test
+    void testObtenerAlertaPorId() throws Exception {
+        Alerta alerta = new Alerta(1, "Sistema", "Alerta de prueba", "ALTA", null);
+        when(alertaRepository.findById(1)).thenReturn(Optional.of(alerta));
+
+        mockMvc.perform(get("/api/monitor/alertas/1"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.tipo").value("Sistema"))
+               .andExpect(jsonPath("$._links.self.href").exists())
+               .andExpect(jsonPath("$._links.todas-alertas.href").exists())
+               .andExpect(jsonPath("$._links.actualizar.href").exists())
+               .andExpect(jsonPath("$._links.eliminar.href").exists());
+    }
+
+    @Test
     void testObtenerAlertas() throws Exception {
         Alerta alerta = new Alerta(1, "Sistema", "Alerta de prueba", "ALTA", null);
-        when(monitor.recibirAlertas()).thenReturn(List.of(alerta));
+        when(alertaRepository.findAll()).thenReturn(List.of(alerta));
 
         mockMvc.perform(get("/api/monitor/alertas"))
                .andExpect(status().isOk())
@@ -70,7 +85,7 @@ public class ControllerMonitorTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(actualizada)))
                .andExpect(status().isOk())
-               .andExpect(content().string("✅ Alerta actualizada."));
+               .andExpect(content().string("Alerta actualizada."));
     }
 
     @Test
@@ -80,7 +95,7 @@ public class ControllerMonitorTest {
 
         mockMvc.perform(delete("/api/monitor/alertas/1"))
                .andExpect(status().isOk())
-               .andExpect(content().string("🗑 Alerta eliminada."));
+               .andExpect(content().string("Alerta eliminada."));
     }
 
     @Test
@@ -89,6 +104,6 @@ public class ControllerMonitorTest {
 
         mockMvc.perform(delete("/api/monitor/alertas"))
                .andExpect(status().isOk())
-               .andExpect(content().string("🚮 Todas las alertas eliminadas."));
+               .andExpect(content().string("Todas las alertas eliminadas."));
     }
 }
