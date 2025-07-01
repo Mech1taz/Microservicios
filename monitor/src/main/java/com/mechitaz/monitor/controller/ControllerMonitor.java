@@ -1,17 +1,21 @@
 package com.mechitaz.monitor.controller;
 
-import org.springframework.web.bind.annotation.*;
 import com.mechitaz.monitor.model.Alerta;
 import com.mechitaz.monitor.repository.AlertaRepository;
 import com.mechitaz.monitor.service.MonitorSistema;
-import org.springframework.hateoas.EntityModel;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/monitor")
@@ -31,29 +35,36 @@ public class ControllerMonitor {
         return monitor.visualizarEstado();
     }
 
-    @Operation(summary = "Lista todas las alertas")
+    @Operation(summary = "Lista todas las alertas con enlaces HATEOAS")
     @GetMapping("/alertas")
-    public List<Alerta> obtenerAlertas() {
-        return alertaRepository.findAll();
+    public ResponseEntity<CollectionModel<EntityModel<Alerta>>> obtenerAlertas() {
+        List<Alerta> alertas = alertaRepository.findAll();
+
+        List<EntityModel<Alerta>> recursos = alertas.stream()
+            .map(alerta -> EntityModel.of(alerta,
+                linkTo(methodOn(ControllerMonitor.class).obtenerAlerta(alerta.getId())).withSelfRel(),
+                linkTo(methodOn(ControllerMonitor.class).obtenerAlertas()).withRel("todasLasAlertas")))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(
+            CollectionModel.of(recursos,
+                linkTo(methodOn(ControllerMonitor.class).obtenerAlertas()).withSelfRel()));
     }
 
-    @Operation(summary = "Obtener alerta por ID")
+    @Operation(summary = "Obtiene una alerta por ID")
     @GetMapping("/alertas/{id}")
-    public EntityModel<Alerta> obtenerAlertaPorId(@PathVariable int id) {
-        Alerta alerta = alertaRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Alerta no encontrada"));
-        
-        return EntityModel.of(alerta,
-            linkTo(methodOn(ControllerMonitor.class).obtenerAlertaPorId(id)).withSelfRel(),
-            linkTo(methodOn(ControllerMonitor.class).obtenerAlertas()).withRel("todas-alertas"),
-            linkTo(methodOn(ControllerMonitor.class).actualizarAlerta(id, null)).withRel("actualizar"),
-            linkTo(methodOn(ControllerMonitor.class).eliminarAlerta(id)).withRel("eliminar")
-        );
+    public ResponseEntity<EntityModel<Alerta>> obtenerAlerta(@PathVariable int id) {
+        return alertaRepository.findById(id)
+            .map(alerta -> EntityModel.of(alerta,
+                linkTo(methodOn(ControllerMonitor.class).obtenerAlerta(id)).withSelfRel(),
+                linkTo(methodOn(ControllerMonitor.class).obtenerAlertas()).withRel("todasLasAlertas")))
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Actualiza alerta por ID") 
+    @Operation(summary = "Actualiza alerta por ID")
     @PutMapping("/alertas/{id}")
-    public String actualizarAlerta(@PathVariable int id, @RequestBody Alerta nuevaAlerta) {
+    public ResponseEntity<String> actualizarAlerta(@PathVariable int id, @RequestBody Alerta nuevaAlerta) {
         Optional<Alerta> alertaExistente = alertaRepository.findById(id);
         if (alertaExistente.isPresent()) {
             Alerta alerta = alertaExistente.get();
@@ -61,25 +72,25 @@ public class ControllerMonitor {
             alerta.setMensaje(nuevaAlerta.getMensaje());
             alerta.setSeveridad(nuevaAlerta.getSeveridad());
             alertaRepository.save(alerta);
-            return "Alerta actualizada.";
+            return ResponseEntity.ok("Alerta actualizada.");
         }
-        return "Alerta no encontrada.";
+        return ResponseEntity.ok("Alerta no encontrada.");
     }
 
     @Operation(summary = "Elimina alerta por ID")
     @DeleteMapping("/alertas/{id}")
-    public String eliminarAlerta(@PathVariable int id) {
+    public ResponseEntity<String> eliminarAlerta(@PathVariable int id) {
         if (alertaRepository.existsById(id)) {
             alertaRepository.deleteById(id);
-            return "Alerta eliminada.";
+            return ResponseEntity.ok("Alerta eliminada.");
         }
-        return "Alerta no encontrada.";
+        return ResponseEntity.ok("Alerta no encontrada.");
     }
 
     @Operation(summary = "Elimina TODAS las alertas")
     @DeleteMapping("/alertas")
-    public String eliminarTodas() {
+    public ResponseEntity<String> eliminarTodas() {
         alertaRepository.deleteAll();
-        return "Todas las alertas eliminadas.";
+        return ResponseEntity.ok("Todas las alertas eliminadas.");
     }
 }

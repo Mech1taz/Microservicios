@@ -6,25 +6,18 @@ import com.mechitaz.monitor.repository.AlertaRepository;
 import com.mechitaz.monitor.service.MonitorSistema;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.List;
 import java.util.Optional;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import org.springframework.hateoas.EntityModel;
 
 @WebMvcTest(ControllerMonitor.class)
 public class ControllerMonitorTest {
@@ -43,24 +36,11 @@ public class ControllerMonitorTest {
 
     @Test
     void testObtenerEstado() throws Exception {
-        when(monitor.visualizarEstado()).thenReturn("SOBRECARGAAAAAAAAA");
+        when(monitor.visualizarEstado()).thenReturn("Estado del sistema: OK");
+
         mockMvc.perform(get("/api/monitor/status"))
                .andExpect(status().isOk())
-               .andExpect(content().string("SOBRECARGAAAAAAAAA"));
-    }
-
-    @Test
-    void testObtenerAlertaPorId() throws Exception {
-        Alerta alerta = new Alerta(1, "Sistema", "Alerta de prueba", "ALTA", null);
-        when(alertaRepository.findById(1)).thenReturn(Optional.of(alerta));
-
-        mockMvc.perform(get("/api/monitor/alertas/1"))
-               .andExpect(status().isOk())
-               .andExpect(jsonPath("$.tipo").value("Sistema"))
-               .andExpect(jsonPath("$._links.self.href").exists())
-               .andExpect(jsonPath("$._links.todas-alertas.href").exists())
-               .andExpect(jsonPath("$._links.actualizar.href").exists())
-               .andExpect(jsonPath("$._links.eliminar.href").exists());
+               .andExpect(content().string("Estado del sistema: OK"));
     }
 
     @Test
@@ -70,11 +50,26 @@ public class ControllerMonitorTest {
 
         mockMvc.perform(get("/api/monitor/alertas"))
                .andExpect(status().isOk())
-               .andExpect(jsonPath("$[0].tipo").value("Sistema"));
+               .andExpect(jsonPath("$._embedded.alertaList[0].id").value(1))
+               .andExpect(jsonPath("$._embedded.alertaList[0].tipo").value("Sistema"))
+               .andExpect(jsonPath("$._embedded.alertaList[0].mensaje").value("Alerta de prueba"))
+               .andExpect(jsonPath("$._embedded.alertaList[0].severidad").value("ALTA"))
+               .andExpect(jsonPath("$._embedded.alertaList[0]._links.self.href").exists());
     }
 
     @Test
-    void testActualizarAlerta() throws Exception {
+    void testObtenerAlertaPorId() throws Exception {
+        Alerta alerta = new Alerta(1, "Sistema", "Prueba", "MEDIA", null);
+        when(alertaRepository.findById(1)).thenReturn(Optional.of(alerta));
+
+        mockMvc.perform(get("/api/monitor/alertas/1"))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.id").value(1))
+               .andExpect(jsonPath("$._links.self.href").exists());
+    }
+
+    @Test
+    void testActualizarAlertaExistente() throws Exception {
         Alerta existente = new Alerta(1, "Sistema", "Mensaje viejo", "MEDIA", null);
         Alerta actualizada = new Alerta(1, "Sistema", "Mensaje nuevo", "BAJA", null);
 
@@ -89,13 +84,35 @@ public class ControllerMonitorTest {
     }
 
     @Test
-    void testEliminarAlerta() throws Exception {
+    void testActualizarAlertaNoExistente() throws Exception {
+        when(alertaRepository.findById(99)).thenReturn(Optional.empty());
+
+        Alerta actualizada = new Alerta(99, "Sistema", "Mensaje nuevo", "BAJA", null);
+
+        mockMvc.perform(put("/api/monitor/alertas/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(actualizada)))
+               .andExpect(status().isOk())
+               .andExpect(content().string("Alerta no encontrada."));
+    }
+
+    @Test
+    void testEliminarAlertaExistente() throws Exception {
         when(alertaRepository.existsById(1)).thenReturn(true);
         doNothing().when(alertaRepository).deleteById(1);
 
         mockMvc.perform(delete("/api/monitor/alertas/1"))
                .andExpect(status().isOk())
                .andExpect(content().string("Alerta eliminada."));
+    }
+
+    @Test
+    void testEliminarAlertaNoExistente() throws Exception {
+        when(alertaRepository.existsById(99)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/monitor/alertas/99"))
+               .andExpect(status().isOk())
+               .andExpect(content().string("Alerta no encontrada."));
     }
 
     @Test
